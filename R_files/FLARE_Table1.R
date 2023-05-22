@@ -11,8 +11,8 @@ library(janitor)
 ### READ IN DATA
 #######
 
-flare<-read.csv("data/FLAREdata.csv")
-flare_info<-read.csv("data/FLARE_site_info.csv")
+flare<-read.csv("FLAREdata.csv")
+flare_info<-read.csv("FLARE_site_info.csv")
 
 #######
 ### CREATE TABLE
