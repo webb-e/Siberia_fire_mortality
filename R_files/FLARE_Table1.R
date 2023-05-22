@@ -528,5 +528,5 @@ crown_severity <- flare %>% filter(treatment == "burned")  %>% group_by(site, re
     
     
     
-    write.csv(final,  file = "figures/Table1.csv")
+    write.csv(final,  file = "Table1.csv")
     
