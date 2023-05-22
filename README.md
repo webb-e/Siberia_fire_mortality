@@ -1,2 +1,4 @@
-# Siberia_fire_mortality
-Code for the analysis published in 'Carbon loss and tree mortality following fire in Siberian larch forests'
+# Siberia fire mortality
+This is the companion code to 'Carbon loss and tree mortality following fire in Siberian larch forests'
+
+It consists of 
