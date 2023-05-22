@@ -6,8 +6,6 @@
 library(dplyr)
 library(tidyverse)
 library(janitor)
-setwd("G:/My Drive/PostDoc/mortality/")
-
 
 #######
 ### READ IN DATA
