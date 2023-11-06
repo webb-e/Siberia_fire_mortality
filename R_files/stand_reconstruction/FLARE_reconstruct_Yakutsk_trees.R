@@ -1,5 +1,5 @@
 ########
-### THIS CODE WRITTEN BY ELIZABETH WEBB, LAST UPDATED APRIL 2023
+### THIS CODE WRITTEN BY ELIZABETH WEBB, LAST UPDATED OCTOBER 2023
 ### FOR CALCULATING ABOVEGROUND TREE CARBON FROM THE FLARE PLOTS IN YAKUTSK
 ########
 
@@ -18,7 +18,6 @@ trees_orig<-read.csv("tree_survey_2018_2019.csv", stringsAsFactors = FALSE)
 prop_carbon<-read.csv("proportionCarbon.csv")
 
 convertfactor<-10000 # to convert m2 to hectares
-
 #### #### #### 
 #### data prep
 #### #### #### 
@@ -70,7 +69,8 @@ trees$basal_breast<-as.factor(trees$basal_breast)
 
       
 ########## PINE TREES
-
+      ## USE M?kel? and  Vanninen 1998, table 4 dataset II
+      
       pine<-subset(trees,species == 'Pinus sylvestris')
       
       pine$kgC<-exp(log(pine$diameter_cm)*2.2608 - 2.3042)*0.47 ## assume 47% carbon
@@ -140,9 +140,12 @@ trees$basal_breast<-as.factor(trees$basal_breast)
           aspen_trees_gCm2,
           pine_trees_gCm2,
           larch_trees_gCm2, na.rm=TRUE))
+
+      treecarbon<-left_join(treecarbon, prop_carbon %>% filter(region=='Yakutsk'), 
+                            by=c('site'))
       
-      treecarbon$trees_gCm2<-treecarbon$trees_raw*0.97
-      treecarbon$snags_gCm2<-treecarbon$trees_raw*0.03
+      treecarbon$trees_gCm2<-treecarbon$trees_raw*treecarbon$mean_trees
+      treecarbon$snags_gCm2<-treecarbon$trees_raw*treecarbon$mean_snags
       
       
       
@@ -162,11 +165,25 @@ treecount$standing_dead_density<-round(0.09*treecount$n/treecount$area_sampled_m
 treecount<-treecount %>% select(site, transect, plot, live_tree_density, standing_dead_density)
 
 
+
+### individuals per hectare
+larchcount<- trees %>% filter(species=='Larix cajanderi') %>% 
+  group_by(site, transect, plot) %>% dplyr::count(site) %>%
+  left_join(select(trees, site, transect, plot, area_sampled_m2),
+            by=c('site', 'transect', 'plot'))%>% distinct() 
+
+## assume that 90% of the trees are live (i.e., count*0.9)
+larchcount$live_larch_density<-round(0.91*larchcount$n/larchcount$area_sampled_m2*convertfactor,0)
+larchcount$standing_larch_density<-round(0.09*larchcount$n/larchcount$area_sampled_m2*convertfactor,0)
+larchcount<-larchcount %>% select(site, transect, plot, live_larch_density)
+
+
+
 ###############################
 ### Merge and write.csv
 ##############################
 
-list_of_dfs<-list(treecount,treecarbon)
+list_of_dfs<-list(treecount,treecarbon, larchcount)
 
 merged_trees<- Reduce(function(x, y) merge(x, y, all.x=TRUE, all.y=TRUE,
                                            by=c("site", "transect", "plot")), list_of_dfs) %>% drop_na(site)
