@@ -1,5 +1,5 @@
 ########
-### THIS CODE WRITTEN BY ELIZABETH WEBB, LAST UPDATED APRIL 2023
+### THIS CODE WRITTEN BY ELIZABETH WEBB, LAST UPDATED OCTOBER 2023
 ### FOR CALCULATING THE PERCENTAGE OF LIVE/DEAD TREE CARBON AT THE FLARE PLOTS
 ########
 
@@ -9,6 +9,7 @@ library(dplyr)
 library(tidyr)
 library(plyr)
 library(gap)
+
 
 
 ###############################
@@ -67,8 +68,6 @@ cherskiy_processed<-read.csv("Cherskiy_tree_C.csv")
         ########## LARCH trees
         
             larch<-subset(treesy,species == 'Larix cajanderi')
-        
-            # use equations from  Delcourt and Veraverbeke 2022
             
             larch$kgC<-(.47*    0.079*larch$diameter_cm^2.435 +  # stems
                           .48*    0.095*larch$diameter_cm^1.749 + # branches
@@ -88,7 +87,7 @@ cherskiy_processed<-read.csv("Cherskiy_tree_C.csv")
         
         
         ########## PINE trees
-        ## USE Use Makela and  Vanninen 1998, table 4 dataset II
+        ## USE M?kel? and  Vanninen 1998, table 4 dataset II
         
             pine<-subset(treesy,species == 'Pinus sylvestris')
             
@@ -152,18 +151,17 @@ cherskiy_processed<-read.csv("Cherskiy_tree_C.csv")
             
             merged_trees<-merged_trees %>% replace(is.na(.),0)
             
-            
             raw_yakutsk_trees <- merged_trees  %>% rowwise()  %>% dplyr::mutate(
               trees_all_gCm2 = sum(
                 birch_all_gCm2,
                 aspen_all_gCm2,
                 pine_all_gCm2,
                 larch_all_gCm2, na.rm=TRUE))
-            
-            
+
             ## merge with 'raw' with processed' data
             yakutsk<-merge(yakutsk_processed, raw_yakutsk_trees, by=c('site', 'transect', 'plot'))  
-      ###############################
+     
+             ###############################
       ### Percent live/dead
       ##############################
             
@@ -238,7 +236,6 @@ cherskiy_processed<-read.csv("Cherskiy_tree_C.csv")
             ### Merge and aggregate
             ##############################
             
-            
             ## merge with 'raw' with processed' data
             cherskiy<-merge(cherskiy_processed, perplot_tree, by=c('site', 'transect', 'plot'))  
             
@@ -264,34 +261,14 @@ cherskiy_processed<-read.csv("Cherskiy_tree_C.csv")
       ## sanity check
       data$total_per<-data$per_snag+ data$per_trees
       
-      ###############################
-      ###  does the proportion of C in standing live vs. dead vary region or site?
-      ##############################
-      
-
-      ## does the proportion vary by region or site?
-      
-      treeaov<-aov(per_trees~region + site ,data=data)
-      snagaov<-aov(per_snag~region + site ,data=data)
-      
-      ### check residuals for normality
-      hist(treeaov$residuals) ## looks good
-      qqPlot(treeaov$residuals) ## ok
-      hist(snagaov$residuals) ## looks good
-      qqPlot(snagaov$residuals) ## ok
-      
-      
-      ### is site or region statistically significant?
-      summary(treeaov)  ## significant differences region but not sites
-      summary(snagaov)  ## significant differences region but not sites
-      ###############################
+     ###############################
       ###  mean proportion by region and site
       ##############################
-
-      
-      finalprod<-data %>% group_by(region) %>%
+      finalprod<-data %>% group_by(region, site) %>%
                        dplyr::summarize(mean_trees = mean(per_trees),
                          mean_snags = mean(per_snag, na.rm=TRUE))
+
+
       
       ###############################
       ###  Save as csv
