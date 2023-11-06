@@ -1,14 +1,11 @@
 ########
-### THIS CODE WRITTEN BY ELIZABETH WEBB, LAST UPDATED APRIL 2023
+### THIS CODE WRITTEN BY ELIZABETH WEBB, LAST UPDATED OCTOBER 2023
 ### FOR RECONSTRUCTING TREE CARBON AND TREE DENSITIES AT THE FLARE PLOTS IN CHERSKIY
 ########
 
 library(tidyr)
 library(dplyr)
 library(plotrix)
-
-# set working drive
-setwd("G:/My Drive")
 
 
 ### load in data
@@ -67,9 +64,11 @@ perplot_tree<-perplot_tree %>% replace(is.na(.),0)
 
 ## combine raw C calculations with percent alive/snag from the unburned
 # 
+treecarbon<-left_join(perplot_tree, prop_carbon %>% filter(region=='Cherskiy'), 
+                       by=c('site'))
 
-perplot_tree$trees_gCm2<-perplot_tree$trees_raw*0.83
-perplot_tree$snags_gCm2<-perplot_tree$trees_raw*0.15
+treecarbon$trees_gCm2<-treecarbon$trees_raw*treecarbon$mean_trees
+treecarbon$snags_gCm2<-treecarbon$trees_raw*treecarbon$mean_snags
 
 
 ###############################
@@ -86,14 +85,15 @@ treecount<- trees %>%
 treecount$live_tree_density<-round(0.78*treecount$n/treecount$area_sampled_m2*convertfactor,0)
 treecount$standing_dead_density<-round(0.22*treecount$n/treecount$area_sampled_m2*convertfactor,0)
 treecount<-treecount %>% select(site, transect, plot, live_tree_density, standing_dead_density)
-
+### all trees are larch
+treecount$live_larch_density<-treecount$live_tree_density
 
 
 ###############################
 ### Merge and write.csv
 ##############################
 
-list_of_dfs<-list(treecount,perplot_tree)
+list_of_dfs<-list(treecount,treecarbon)
 
 merged_trees<- Reduce(function(x, y) merge(x, y, all.x=TRUE, all.y=TRUE,
                                            by=c("site", "transect", "plot")), list_of_dfs) %>% drop_na(site)
